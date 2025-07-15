@@ -1,0 +1,100 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.36.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           triangulation
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/triangulation#readme>
+homepage:       https://github.com/alexelyukov/triangulation#readme
+bug-reports:    https://github.com/alexelyukov/triangulation/issues
+author:         Alex Elyukov
+maintainer:     alexelyukov@gmail.com
+copyright:      2025 alexelyukov
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/alexelyukov/triangulation
+
+library
+  exposed-modules:
+      Drawer
+      Examples.Circle
+      Examples.Simple
+      Examples.Solenoid
+      Generator
+      Geometry.Edge
+      Geometry.Point
+      Geometry.Polygon
+      Geometry.Triangle
+      Geometry.Types.Edge
+      Geometry.Types.Partition
+      Geometry.Types.Point
+      Geometry.Types.PointPosition
+      Geometry.Types.Polygon
+      Geometry.Types.PolygonProliferation
+      Geometry.Types.Rectangle
+      Geometry.Types.Triangle
+      Triangulation
+      TriangulationEvaluation
+      TriangulationStore
+      Utils
+  other-modules:
+      Paths_triangulation
+  autogen-modules:
+      Paths_triangulation
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      JuicyPixels
+    , Rasterific
+    , base >=4.7 && <5
+    , deepseq
+    , hashable
+    , matrix
+    , monad-par
+    , random
+    , split
+    , unordered-containers
+  default-language: Haskell2010
+
+executable triangulation-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_triangulation
+  autogen-modules:
+      Paths_triangulation
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N8
+  build-depends:
+      base >=4.7 && <5
+    , triangulation
+  default-language: Haskell2010
+
+test-suite triangulation-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      TriangulationSpec
+      Paths_triangulation
+  autogen-modules:
+      Paths_triangulation
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N8
+  build-depends:
+      HUnit
+    , base >=4.7 && <5
+    , deepseq
+    , triangulation
+    , unordered-containers
+  default-language: Haskell2010
