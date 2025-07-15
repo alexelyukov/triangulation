@@ -1,7 +1,7 @@
 # Triangulation 2D
 
 ## intro
-Triangulation 2D with simple non-crossed restrictions
+Non-crossed constrained Delaunay triangulation 2D
 
 ## build
 `stack build`
