@@ -1,26 +1,43 @@
-name:                triangulation
-version:             0.1.0.0
+name:                pure-cdt
+version:             0.2.0.0
 github:              "alexelyukov/triangulation"
 license:             BSD-3-Clause
 author:              "Alex Elyukov"
 maintainer:          "alexelyukov@gmail.com"
-copyright:           "2025 alexelyukov"
+copyright:           "2025-2026 Alex Elyukov"
 
-extra-source-files:
+extra-doc-files:
 - README.md
 - CHANGELOG.md
 
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
+tested-with:         GHC == 9.6.7 || == 9.10.3 || == 9.14.1
 
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/triangulation#readme>
+synopsis:            Constrained Delaunay triangulation and mesh refinement in 2D, in pure Haskell
+category:            Geometry
+description: |
+  Delaunay triangulation of a set of points in the plane, computed by divide
+  and conquer and parallelised with @Control.Parallel.Strategies@; constrained
+  triangulation of a polygon with holes, where the boundary edges are forced
+  into the triangulation and the triangles outside the region are dropped;
+  Delaunay refinement (Ruppert's algorithm) to a minimum angle and a maximum
+  triangle area; and an indexed mesh (node coordinates, index triples,
+  boundary edges) for finite element code.
+
+  Everything is written in Haskell, with a pure API and no bindings to a C or
+  C++ library, so the package builds wherever GHC does.
+
+  The geometric predicates (orientation, in-circle, segment crossing) are
+  exact: a floating-point filter decides the easy cases and @Rational@
+  arithmetic the rest, so collinear and cocircular inputs are handled
+  correctly.
+
+  Start with the "Triangulation" module. Please see the README on GitHub at
+  <https://github.com/alexelyukov/triangulation#readme>.
+
+language:            GHC2021
 
 dependencies:
-- base >= 4.7 && < 5
+- base >= 4.18 && < 5
 
 ghc-options:
 - -Wall
@@ -32,41 +49,75 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
+- -Wunused-packages
 
 library:
   source-dirs: src
   dependencies:
-    - monad-par
-    - deepseq
-    - matrix
-    - hashable
-    - unordered-containers
-    - random
-    - split
-    - JuicyPixels
-    - Rasterific
+    - parallel >= 3.2 && < 3.4
+    - deepseq >= 1.4 && < 1.6
+    - hashable >= 1.4 && < 1.6
+    - unordered-containers >= 0.2.19 && < 0.3
+    - random >= 1.2 && < 1.4
+    - vector >= 0.13 && < 0.14
+
+flags:
+  examples:
+    description: Build the executable that renders the example pictures
+    manual: true
+    default: false
 
 executables:
-  triangulation-exe:
+  pure-cdt-examples:
     main:                Main.hs
     source-dirs:         app
+    when:
+      - condition: "!flag(examples)"
+        buildable: false
     ghc-options:
     - -threaded
     - -rtsopts
-    - -with-rtsopts=-N8
+    - -with-rtsopts=-maxN8
     dependencies:
-    - triangulation
+    - pure-cdt
+    - JuicyPixels >= 3.3 && < 3.4
+    - Rasterific >= 0.7 && < 0.8
 
 tests:
-  triangulation-test:
-    main:                Spec.hs
+  pure-cdt-test:
+    main:                Main.hs
     source-dirs:         test
     ghc-options:
     - -threaded
     - -rtsopts
-    - -with-rtsopts=-N8
+    - -with-rtsopts=-maxN8
     dependencies:
-    - HUnit
-    - deepseq
-    - unordered-containers
-    - triangulation
+    - hashable >= 1.4 && < 1.6
+    - tasty >= 1.4 && < 1.6
+    - tasty-hunit >= 0.10 && < 0.11
+    - tasty-quickcheck >= 0.10 && < 0.12
+    - vector >= 0.13 && < 0.14
+    - pure-cdt
+
+benchmarks:
+  pure-cdt-bench:
+    main:                Main.hs
+    source-dirs:         bench
+    other-modules:       []
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-maxN8
+    dependencies:
+    - tasty-bench >= 0.3 && < 0.5
+    - pure-cdt
+  pure-cdt-scaling:
+    main:                Scale.hs
+    source-dirs:         bench
+    other-modules:       []
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    dependencies:
+    - deepseq >= 1.4 && < 1.6
+    - pure-cdt

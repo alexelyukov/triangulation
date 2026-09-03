@@ -1,0 +1,19 @@
+# HLint configuration. See https://github.com/ndmitchell/hlint#readme
+
+# `generalise` (map -> fmap, ++ -> <>) is deliberately off: this is list-heavy
+# geometry code and the concrete list functions read better.
+- group: {name: generalise-for-conciseness, enabled: true}
+
+# Partial functions are banned in the library.
+- error: {name: Avoid restricted function}
+- functions:
+  - {name: head, within: []}
+  - {name: tail, within: []}
+  - {name: last, within: []}
+  - {name: init, within: []}
+  - {name: "!!", within: []}
+  - {name: fromJust, within: []}
+  - {name: error, within: []}
+
+# Formatting is handled by fourmolu.
+- ignore: {name: Use camelCase}

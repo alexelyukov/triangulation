@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build:
+    name: stack build & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: haskell-actions/setup@v2
+        with:
+          enable-stack: true
+          stack-no-global: true
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: stack-${{ runner.os }}-${{ hashFiles('stack.yaml', 'package.yaml') }}
+          restore-keys: stack-${{ runner.os }}-
+
+      - run: stack build --test --bench --no-run-tests --no-run-benchmarks --pedantic
+      - run: stack test
+
+  lint:
+    name: fourmolu & hlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: haskell-actions/run-fourmolu@v13
+        with:
+          version: "0.20.1.0"
+          pattern: |
+            src/**/*.hs
+            app/**/*.hs
+            test/**/*.hs
+            bench/**/*.hs
+
+      - uses: haskell-actions/hlint-setup@v2
+      - uses: haskell-actions/hlint-run@v2
+        with:
+          path: '["src/", "app/", "test/", "bench/"]'
+          fail-on: warning

@@ -1,64 +1,34 @@
+-- | Constrained Delaunay triangulation and mesh refinement in 2D.
+--
+-- * 'triangulate' builds the Delaunay triangulation of a point set by
+--   divide and conquer.
+-- * 'constrainedTriangulate' triangulates a polygon with holes.
+-- * 'refine' inserts vertices until every triangle meets an angle and area
+--   bound (Ruppert's algorithm), keeping the boundary and hole edges.
+-- * 'toMesh' numbers the vertices and gives the triangles as index triples,
+--   the form finite element code and mesh file formats expect.
+--
+-- Coordinates follow the mathematical convention (y axis up); polygons are
+-- wound clockwise.
 module Triangulation (
-  Triangulation(..),
+  Triangulation (..),
+  triangles,
   triangulate,
-  mergeTriangulations,
-  checkDelaunay,
-  checkNotIntersected
+  constrainedTriangulate,
+  Quality (..),
+  defaultQuality,
+  refine,
+  refineWithBudget,
+  Mesh (..),
+  toMesh,
+  fromMesh,
+  boundaryEdges,
+  module Triangulation.Geometry,
 ) where
 
-import Control.DeepSeq (NFData, rnf)
-import Geometry.Types.Partition ( Partition(..) )
-import Geometry.Types.Point ( Point )
-import Geometry.Types.Polygon ( Polygon(..) )
-import Geometry.Types.Edge ( Edge(..) )
-import Geometry.Polygon ( buildConvexHull, calcTangents, mergePolygons )
-import Geometry.Triangle (
-  mergeTriangles,
-  buildTrianglesOn3Points,
-  buildTrianglesOn4Points,
-  checkDelaunayConditions,
-  checkNotIntersectedConditions
-  )
-import Geometry.Point ( getRightBottomPoint, getBottomRightPoint, getLeftTopPoint, getTopLeftPoint )
-import TriangulationStore (
-  TriangulationStore,
-  insertTriangle,
-  emptyTriangulationStore,
-  getAllTriangles,
-  unionTriangulationStores
-  )
-import Utils ( rebuildBy2Elements )
-
-data Triangulation = Triangulation Polygon TriangulationStore deriving (Show)
-
-instance NFData Triangulation where
-  rnf (Triangulation poly newTris) = rnf poly `seq` rnf newTris
-
-triangulate :: [Point] -> Triangulation
-triangulate points =
-  let convexHull = buildConvexHull points
-      Polygon convexHullPoints = convexHull
-      triangles = if length points == 3
-                  then buildTrianglesOn3Points convexHullPoints
-                  else buildTrianglesOn4Points convexHullPoints points
-      triangles' = foldr insertTriangle emptyTriangulationStore triangles
-  in Triangulation convexHull triangles'
-
-mergeTriangulations :: Triangulation -> Triangulation -> Partition -> Triangulation
-mergeTriangulations (Triangulation polygon1@(Polygon points1) triangles1) (Triangulation polygon2@(Polygon points2) triangles2) partition =
-  let edgePointLeft = (if partition == Vertical then getRightBottomPoint else getBottomRightPoint) points1
-      edgePointRight = (if partition == Vertical then getLeftTopPoint else getTopLeftPoint) points2
-      (edgeBottom, edgeTop) = (Edge (edgePointLeft, edgePointRight), Edge (edgePointLeft, edgePointRight))
-      mergedPolygon = mergePolygons polygon1 polygon2 (edgeBottom, edgeTop)
-      (Edge (bl, br), Edge (tl, tr), mergedPolygon') = calcTangents polygon1 polygon2 (edgeBottom, edgeTop, mergedPolygon)
-      remainsPolygon1 = rebuildBy2Elements points1 bl tl
-      remainsPolygon2 = reverse $ rebuildBy2Elements points2 tr br
-      unitedTriangles = unionTriangulationStores triangles1 triangles2
-      mergedTriangles = mergeTriangles unitedTriangles remainsPolygon1 remainsPolygon2 []
-  in Triangulation mergedPolygon' mergedTriangles
-
-checkDelaunay :: Triangulation -> Bool
-checkDelaunay (Triangulation _ store) = checkDelaunayConditions $ getAllTriangles store
-
-checkNotIntersected :: Triangulation -> Bool
-checkNotIntersected (Triangulation _ store) = checkNotIntersectedConditions $ getAllTriangles store
+import Triangulation.Constrained (constrainedTriangulate)
+import Triangulation.Geometry
+import Triangulation.Mesh (Mesh (..), boundaryEdges, fromMesh, toMesh)
+import Triangulation.Parallel (triangulate)
+import Triangulation.Refine (Quality (..), defaultQuality, refine, refineWithBudget)
+import Triangulation.Types (Triangulation (..), triangles)
